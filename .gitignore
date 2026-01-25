@@ -1,0 +1,30 @@
+# 编译后的二进制文件
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# 测试文件
+*.test
+
+# 输出目录
+*.out
+
+# Go工作空间文件
+go.work
+
+# 数据文件目录（运行时数据，不应提交到版本控制）
+data/
+
+# IDE相关
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统相关
+.DS_Store
+Thumbs.db
+
