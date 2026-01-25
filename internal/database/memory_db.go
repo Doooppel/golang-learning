@@ -76,8 +76,8 @@ func (db *InMemoryDB) CreateUser(name, email string, age int) (*models.User, err
 	db.users[user.ID] = user
 	db.nextID++
 
-	// 自动保存到文件
-	if err := db.saveToFile(); err != nil {
+	// 自动保存到文件（已经持有写锁，使用不带锁的版本）
+	if err := db.saveToFileUnlocked(); err != nil {
 		// 记录错误但不影响创建操作
 		fmt.Printf("⚠️  保存数据到文件失败: %v\n", err)
 	}
@@ -150,8 +150,8 @@ func (db *InMemoryDB) UpdateUser(id int, name, email *string, age *int) (*models
 
 	user.UpdatedAt = time.Now()
 
-	// 自动保存到文件
-	if err := db.saveToFile(); err != nil {
+	// 自动保存到文件（已经持有写锁，使用不带锁的版本）
+	if err := db.saveToFileUnlocked(); err != nil {
 		fmt.Printf("⚠️  保存数据到文件失败: %v\n", err)
 	}
 
@@ -172,8 +172,8 @@ func (db *InMemoryDB) DeleteUser(id int) error {
 
 	delete(db.users, id)
 
-	// 自动保存到文件
-	if err := db.saveToFile(); err != nil {
+	// 自动保存到文件（已经持有写锁，使用不带锁的版本）
+	if err := db.saveToFileUnlocked(); err != nil {
 		fmt.Printf("⚠️  保存数据到文件失败: %v\n", err)
 	}
 
@@ -197,7 +197,7 @@ func (db *InMemoryDB) GetUserByEmail(email string) (*models.User, error) {
 	return nil, fmt.Errorf("邮箱 %s 不存在", email)
 }
 
-// saveToFile 保存数据到JSON文件
+// saveToFile 保存数据到JSON文件（公共方法，会自动获取读锁）
 // 展示了：
 // 1. JSON序列化
 // 2. 文件操作
@@ -205,7 +205,12 @@ func (db *InMemoryDB) GetUserByEmail(email string) (*models.User, error) {
 func (db *InMemoryDB) saveToFile() error {
 	db.mu.RLock()
 	defer db.mu.RUnlock()
+	return db.saveToFileUnlocked()
+}
 
+// saveToFileUnlocked 保存数据到JSON文件（内部方法，不获取锁）
+// 注意：调用此方法前必须已经持有锁（读锁或写锁）
+func (db *InMemoryDB) saveToFileUnlocked() error {
 	// 创建数据目录（如果不存在）
 	dir := filepath.Dir(db.filePath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -294,4 +299,20 @@ func (db *InMemoryDB) loadFromFile() error {
 
 	fmt.Printf("✅ 成功加载 %d 个用户数据\n", len(db.users))
 	return nil
+}
+
+// SetFilePath 设置数据文件路径（主要用于测试）
+func (db *InMemoryDB) SetFilePath(path string) {
+	db.mu.Lock()
+	defer db.mu.Unlock()
+	db.filePath = path
+}
+
+// NewInMemoryDBForTest 创建用于测试的内存数据库（不加载文件）
+func NewInMemoryDBForTest(filePath string) *InMemoryDB {
+	return &InMemoryDB{
+		users:    make(map[int]*models.User),
+		nextID:   1,
+		filePath: filePath,
+	}
 }

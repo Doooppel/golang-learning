@@ -197,9 +197,30 @@ curl -X DELETE http://localhost:8080/api/v1/users/1
 5. **第五步**：查看 `internal/router/router.go`，学习路由配置
 6. **第六步**：阅读 `examples/advanced_features.go`，掌握高级特性
 
+## 🧪 测试
+
+项目包含完整的测试套件，覆盖所有功能：
+
+```bash
+# 运行所有测试
+go test ./... -v
+
+# 运行特定包的测试
+go test ./internal/database -v
+go test ./internal/handlers -v
+
+# 运行集成测试
+go test -v -run TestIntegration
+
+# 查看测试覆盖率
+go test ./... -cover
+```
+
+详细测试文档请查看 [TESTING.md](TESTING.md)
+
 ## 🎯 扩展建议
 
-- [ ] 添加单元测试
+- [x] 添加单元测试 ✅
 - [ ] 集成真实数据库（PostgreSQL/MySQL）
 - [ ] 添加JWT认证
 - [ ] 实现分页功能
