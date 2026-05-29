@@ -86,3 +86,24 @@ func ProcessData(r io.Reader) (n int, err error) {
 	buf := make([]byte, 1024)
 	return r.Read(buf)
 }
+
+func TestStruc(t *testing.T) {
+	type Person struct {
+		Name  string
+		Age   int
+		Email string
+	}
+
+	var person1 = Person{
+		Name:  "Doppel",
+		Age:   28,
+		Email: "dop@dop.com",
+	}
+	fmt.Println(person1)
+
+	person2 := &Person{
+		Name: "Doppel2",
+		Age:  29,
+	}
+	fmt.Println(*person2)
+}
